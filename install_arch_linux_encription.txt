@@ -1,0 +1,104 @@
+Ссылка:
+https://m.vk.com/doc-129498031_469135476
++======================================>
+### sda - С„Р»РµС€РєР°, sdb - Р¶РµСЃС‚РєРёР№ РґРёСЃРє
+
+passwd root
+lsblk
+ping -c1 google.com
+cfdisk /dev/sda
+ 	 dos
+mkfs.ext4 -L BOOT_D /dev/sda1
+mount /dev/sda1 /mnt
+cd /mnt
+С‚РѕРєРµРЅ dd if=/dev/random of=/mnt/key.bin bs=1 count=6291456
+cryptsetup -h sha512 -c aes-xts-plain64 -s 512 luksFormat /dev/sdb -d key.bin
+	YES
+cryptsetup -d=key.bin luksOpen /dev/sdb DRIVE_D
+	pvcreate /dev/mapper/DRIVE_D
+	vgcreate D5D /dev/mapper/DRIVE_D
+		(РґР»СЏ РґРёСЃРєР° 500 РіР±)
+	lvcreate -L20G -nswap D5D
+	lvcreate -L20G -ntmp  D5D
+	lvcreate -L160 -nroot D5D
+	lvcreate -l 100%FREE -nhome D5D
+mkfs.ext4 -L TMP  /dev/mapper/D5D-tmp
+mkfs.ext4 -L root /dev/mapper/D5D-root
+mkfs.ext4 -L home /dev/mapper/D5D-home
+mkswap -L swap /dev/mapper/D5D-swap
+lsblk
+cd ..
+umount /mnt
+mount /dev/mapper/CRYPT-root /mnt
+cd /mnt
+mkdir boot home
+mount /dev/mapper/CRYPT-home /mnt/home
+swapon /dev/mapper/CRYPT-swap
+mount /dev/sda1 /mnt/boot
+
+nano /etc/pacman.d/mirrorlist
+	Server = http://mirror.yandex.ru/archlinux/$repo/os/$arch
+nano /etc/pacman.conf
+	TotalDownload
+pacstrap -i /mnt base base-devel grub os-prober bash-completion nano elinks mc netctl dialog
+genfstab -p -U /mnt > /mnt/etc/fstab
+
+arch-chroot /mnt /bin/bash
+ln -sf /usr/share/zoneinfo/Europe/Moscow /etc/localtime
+nano /etc/locale.gen
+	ru_RU.UTF-8 UTF-8
+	en_US.UTF-8 UTF-8
+locale-gen
+nano /etc/locale.conf
+	LANG=ru_RU.UTF-8
+nano /etc/vconsole.conf
+	KEYMAP=ru
+	FONT="cyr-sun16"
+nano /etc/hostname
+	localhost
+nano  /etc/hosts
+	127.0.0.1 localhost.localdomain localhost
+	::1 localhost.localdomain localhost
+useradd -m -g users -G wheel -s /bin/bash sergiy
+nano /etc/sudoers
+	#root ALL=(ALL) ALL
+	%wheel ALL=(ALL) ALL
+passwd root
+passwd sergiy
+pacman -S xorg xorg-drivers xorg-xinit xfce4 xfce4-goodies lightdm lightdm-gtk-greeter
+systemctl enable dhcpcd.service
+
+nano /etc/default/grub
+	GRUB_CMDLINE_LINUX_DEFAULT=""
+	GRUB_CMDLINE_LINUX="cryptdevice=UUID=528f38c3-7ad3-4969-90e3-26ee4bd68daa:cryptodisk 
+		root=/dev/mapper/CRYPT-root cryptkey=UUID=484d042e-5c0b-4101-92ed-44b557553410:ext4:key.bin" 
+	CRUB_ENABLE_CRYPTODISK=1
+nano /etc/mkinicpio.conf
+	FILES="/boot/key.bin"
+	HOOKS="base udev autodetect modconf block keyboard encrypt lvm2 filesystems fsck"
+mkinitcpio -p linux
+grub-install --target=i386-pc /dev/sda (С„Р»РµС€РєР°)
+grub-mkconfig -o /boot/grub/grub.cfg
+exit
+umount -R /mnt
+reboot
+
+(СЃРїРѕСЃРѕР±С‹ Р·Р°РїСѓСЃРєР° xfce) 
+1. 
+startxfce4
+2. 
+nano /home/sergiy/.xinitrc
+	exec /usr/bin/xfce4-session
+startx
+3.
+systemctl start lightdm.service
+
+
+
+
+
+
+
+
+
+
