@@ -1,0 +1,133 @@
+Хабр
+Установка Archlinux c полным шифрованием системы и LVM на LUKS
+https://habr.com/ru/post/420081/
++===============
+tmux links
++===============
+links https://wiki.archlinux.org/index.php/Dm-crypt/Device_encryption#Cryptsetup_usage
+links https://habr.com/ru/post/420081/
++===============
+-----------------------------------------------------------------------------------------------------------------------
+ssh или ...
++===============
+1. timedatectl set-ntp true && timedatectl set-timezone Europe/Moscow
+2. root@archiso ~ # timedatectl 
+cfdisk -l /dev/vda
+3. root@archiso ~ # fdisk -l /dev/vda 
+4. root@archiso ~ # gdisk /dev/vda 
+GPT fdisk (gdisk) version 1.0.4 
+Command (? for help): o This option deletes all partitions and creates a new protective MBR. Proceed? (Y/N): y 
++===============
+Command (? for help): n
+Partition number (1-128, default 1): 
+First sector (34-31457246, default = 2048) or {+-}size{KMGTP}: 
+Last sector (2048-31457246, default = 31457246) or {+-}size{KMGTP}: +512M <===========================
+Current type is 'Linux filesystem' Hex code or GUID (L to show codes, Enter = 8300): <b>EF00</b> Changed type of partition to 'EFI System' 
++===============
+Command (? for help): n 
+Partition number (2-128, default 2): 
+First sector (34-31457246, default = 1050624) or {+-}size{KMGTP}: 
+Last sector (1050624-31457246, default = 31457246) or {+-}size{KMGTP}: <b>Current type is 'Linux filesystem' Hex code or GUID (L to show codes, Enter = 8300): Changed type of partition to 'Linux filesystem'</b> 
++===============
+Command (? for help): w
+ Final checks complete. About to write GPT data. THIS WILL OVERWRITE EXISTING PARTITIONS!! Do you want to proceed? (Y/N): y OK; writing new GUID partition table (GPT) to /dev/vda. The operation has completed successfully. 
++===============
++===============
+5. root@archiso ~ # mkfs.vfat /dev/vda1 
+mkfs.fat 4.1 (2017-01-24)
++===============
+mkfs.ext2 /dev.vda
++===============
+6. root@archiso ~ # cryptsetup -v luksFormat /dev/vda2 
+WARNING! ======== 
+This will overwrite data on /dev/vda2 irrevocably. Are you sure? 
+(Type uppercase yes): YES 
+Enter passphrase for /dev/vda2: 
+Verify passphrase: Command successful. 
++===============
+7. root@archiso ~ # cryptsetup luksOpen /dev/vda2 
+8. root@archiso ~ # ls -l /dev/mapper | grep container 
+9. root@archiso ~ # pvcreate /dev/mapper/container 
+10. root@archiso ~ # vgcreate rootvg /dev/mapper/container 
++===============
+11. root@archiso ~ # lvcreate -L4G -n swap rootvg 
+12. root@archiso ~ # lvcreate -L10G -n root rootvg 
+13. root@archiso ~ # lvcreate -L15G -n home rootvg 
+14. root@archiso ~ # lvs
++===============
+15. root@archiso ~ # mkfs.ext4 -L root /dev/mapper/rootvg-root 
+16. [root@archiso ~]# mkfs.ext4 -L home /dev/mapper/rootvg-home
+17. [root@archiso ~]# mkswap -L swap /dev/mapper/rootvg-swap 
++===============
+18. [root@archiso ~]# mount /dev/mapper/rootvg-root /mnt/ 
+19. [root@archiso ~]# mkdir -p /mnt/{home,boot/efi} 
+20. [root@archiso ~]# mount /dev/vda1 /mnt/boot/efi/ 
+21. [root@archiso ~]# mount /dev/mapper/rootvg-home /mnt/home/ 
+22. [root@archiso ~]# swapon /dev/mapper/rootvg-swap 
++===============
+23. [root@archiso ~]# lsblk
++===============
+24. genfstab -pU /mnt >> /mnt/etc/fstab 
++===============
+25. [root@archis''o ~]# arch-chroot /mnt 
++============='==
+*** arch-chroot очень даже годная утилита, потому как она делает всё сама. Хотя вы всегда можете воспользоваться стандартным chroot, перед этим выполнив всё по инструкции gentoo-handbook wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Base раздел «Mounting the necessary filesystems»
++===============
+26. ln -s /usr/share/zoneinfo/Europe/Moscow /etc/localtime && \ hwclock --systohc && \ echo luks-test > /etc/hostname 
++===============
+27. [root@archiso /]# passwd root 
+New password: 
+Retype new password: passwd: 
+password updated successfully 
++===============
+28. [root@archiso /]# vi /etc/locale.gen 
+29. [root@archiso /]# grep -v '^#' /etc/locale.gen en_US ISO-8859-1 en_US.UTF-8 UTF-8 ru_RU.UTF-8 UTF-8 ru_RU ISO-8859-5
+30. [root@archiso /]# locale-gen 
+31. [root@archiso /]# echo LANG=en_US.UTF-8 > /etc/locale.conf 
+32. [root@archiso /]# echo KEYMAP=ru > /etc/vconsole.conf 
+33. [root@archiso /]# echo FONT=cyr-sun16 >> /etc/vconsole.conf
++===============
+34. vi /etc/mkinitcpio.conf
++===============
+HOOKS=(base udev autodetect modconf block keymap encrypt lvm2 resume filesystems keyboard fsck)
+
+*** хук resume для загрузки системы после гибернации из swap. На виртуалке он не нужен. Скопировал его с бука.
++===============
+Теперь мы можем сгенерировать initramfs:
++===============
+35. [root@archiso /]# mkinitcpio -p linux 
++===============
+grub(2), потому как он как-то роднее и достаточно легко умеет загружать ядро с зашифрованного раздела
++===============
+36. [root@archiso /]# pacman -S grub dosfstools efibootmgr mtools 
+37. vim /etc/default/grub
++===============
+здесь нужно раскомментить одну важную строчку(без коммента, естественно):
+# Uncomment to enable booting from LUKS encrypted devices GRUB_ENABLE_CRYPTODISK=y 
+и добавить(там пусто по умолчанию) в GRUB_CMDLINE_LINUX:
+
+GRUB_CMDLINE_LINUX="cryptdevice=UUID=5ad7c9ad-fb17-4839-925e-479432516c07:container" 
+UUID +========> blkid:
++===============
+38. [root@archiso /]# blkid | grep vda2 /
++===============
+dev/vda2: UUID="5ad7c9ad-fb17-4839-925e-479432516c07" TYPE="crypto_LUKS" PARTLABEL="Linux filesystem" PARTUUID="667a1243-17ff-4f03-952c-5afd5e3415cc" 
++===============
+39. [root@archiso /]# grub-mkconfig -o /boot/grub/grub.cfg 
++================
+40. [root@archiso /]# grub-install /dev/vda 
++===============
+============grub-install --target=i386-pc /dev/sda========
+*** можно добавить --recheck --debug, указать архитектуру… но… оно ведь само и так работает)
++===============
+41. echo "container /dev/vda2 none" >> /etc/crypttab 
++===============
+Которая означает, что надо запрашивать пароль(none) для раздела /dev/vda2 и представлять его уже как container через device mapper.
++===============
+42. [root@archiso /]# exit 
+43. umount -R /mnt
+44. [root@archiso ~]# reboot 
+Welcome back!
++===============
+14 августа 2018 в 20:44
+ 
