@@ -1,0 +1,63 @@
+# dwmstatus 2>&1 >/dev/null &
+xsetroot -name $status
+xprop -root -notype -f WM_NAME "8u" \
+	| sed -n -r 's/WM_NAME = \"(.*)\"/\1/p'
+    
+
+
+
+# Statusbar
+#(conky | while read LINE; do xsetroot -name "$LINE"; done) &
+#conky | dwm-setstatus &
+#/home/admin/.conkyrc 2>&1 >/dev/null &
+/home/admin/dwm-bar/dwm_bar.sh &
+#/home/admin/dwm-iconbar &
+# Import the modules
+# . "$DIR/bar-functions/dwm_myfucntion"
+
+#while true
+#do
+#xsetroot -name "$(dwm_myfunction)"
+#    sleep 1s
+
+#done
+#dwmblocks 2>&1 >/dev/null &
+#dwmstatus 2>&1 >/dev/null &
+#while true; do
+ #    xsetroot -name "$( date )"  
+  #   sleep 1s    # Время обновления
+#done &
+
+#     xsetroot -name "$( conky | while read LINE; do xsetroot -name "$LINE"; done) )"  
+ #    sleep 1s    # Время обновления
+#done &
+
+# Keyboard Layyout
+setxkbmap "us,ru" "," "grp:alt_shift_toggle,grp_led:scroll" # с чек листа по i3-wm
+
+# Nitrogen  
+nitrogen --restore &
+
+gxkb &
+# feh --bg-scale /home/admin/обои/wallpapers-cars.jpg
+# exec rofi -show drun &
+# exec telegram-desktop &
+# exec --nostartup-id nm-applet &
+exec nm-applet &
+
+# Display Resolution
+# xrandr --output Virtual -1 --mode 1366x768 &
+
+# Compositor
+picom -f & # для gappx патчей
+
+# Execute DWM
+# exec dwm
+# DISPLAY=foo.bar:1 exec dwm 
+# scrot как напровлять не знаю /h#ome/Пользователь/screenshots 
+
+#while true; do
+ #  dwm >/dev/null 2>&1
+#done 
+# ПЕРЕЗАПУСК DWM Mod1+shift+Q 
+
