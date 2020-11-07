@@ -1,0 +1,19 @@
+# Go to needle directory!
+
+git init 
+git add .
+git commit -m 'comment to commit'
+git remote add origin https://github.com/karatun75/GitTest.git
+
+git status
+
+git config --global user.name "karatun75"
+git config --global user.email "karatun75@gmail.com"
+
+
+git config --global push.default simple
+git push
+
+git checkout 
+git branch
+git stash
