@@ -1,0 +1,74 @@
+From 43d8a0f3df28ba0b25b85eb38b0f990b9947c48a Mon Sep 17 00:00:00 2001
+From: Miles Alan <m@milesalan.com>
+Date: Sat, 1 Feb 2020 09:55:43 -0600
+Subject: [PATCH] Add transferall function which swaps the master & stack and
+ adjusts nmaster.
+
+All stack clients after the function is run are moved into the master area
+and master clients are moved into the stack area. The new nmaster will be
+adjusted to be equal to the old number of clients in the stack (e.g. the
+new number of clients in the master).
+---
+ config.def.h |  1 +
+ dwm.c        | 26 ++++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+)
+
+diff --git a/config.def.h b/config.def.h
+index 1c0b587..cce5b64 100644
+--- a/config.def.h
++++ b/config.def.h
+@@ -70,6 +70,7 @@ static Key keys[] = {
+ 	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
+ 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
+ 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
++	{ MODKEY,                       XK_z,      transferall,    {0} },
+ 	{ MODKEY,                       XK_Return, zoom,           {0} },
+ 	{ MODKEY,                       XK_Tab,    view,           {0} },
+ 	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
+diff --git a/dwm.c b/dwm.c
+index 4465af1..a8864e9 100644
+--- a/dwm.c
++++ b/dwm.c
+@@ -213,6 +213,7 @@ static void togglebar(const Arg *arg);
+ static void togglefloating(const Arg *arg);
+ static void toggletag(const Arg *arg);
+ static void toggleview(const Arg *arg);
++static void transferall(const Arg *arg);
+ static void unfocus(Client *c, int setfocus);
+ static void unmanage(Client *c, int destroyed);
+ static void unmapnotify(XEvent *e);
+@@ -1746,6 +1747,31 @@ toggleview(const Arg *arg)
+ 	}
+ }
+ 
++void
++transferall(const Arg *arg) {
++	Client *c, *n = selmon->clients, *attachfrom = NULL;
++	int i = 0, nstackclients = 0;
++	while (n) {
++		c = n;
++		n = c->next;
++		if (!ISVISIBLE(c) || c->isfloating) continue;
++		if (i >= selmon->nmaster) {
++			detach(c);
++			if (!attachfrom) {
++				attach(c);
++			} else {
++				c->next = attachfrom->next;
++				attachfrom->next = c;
++			}
++			attachfrom = c;
++			nstackclients++;
++		}
++		i++;
++	}
++	selmon->nmaster = nstackclients;
++	arrange(selmon);
++}
++
+ void
+ unfocus(Client *c, int setfocus)
+ {
+-- 
+2.23.1
+

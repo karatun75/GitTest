@@ -1,0 +1,77 @@
+From 57500f9154a3aa99f38f98d552915b8570b7cfdf Mon Sep 17 00:00:00 2001
+From: Miles Alan <m@milesalan.com>
+Date: Sat, 25 Jan 2020 22:47:38 -0600
+Subject: [PATCH] Add transfer function which transfers tiled client between
+ the stack & master. Adjusts the nmaster variable accordingly (e.g. if moving
+ to master, nmaster++ and if moving to stack nmaster--).
+
+Default keybinding added to config.def.h is Mod+x
+---
+ config.def.h |  1 +
+ dwm.c        | 34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 35 insertions(+)
+
+diff --git a/config.def.h b/config.def.h
+index 1c0b587..67ec8ae 100644
+--- a/config.def.h
++++ b/config.def.h
+@@ -70,6 +70,7 @@ static Key keys[] = {
+ 	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
+ 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
+ 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
++	{ MODKEY,                       XK_x,      transfer,       {0} },
+ 	{ MODKEY,                       XK_Return, zoom,           {0} },
+ 	{ MODKEY,                       XK_Tab,    view,           {0} },
+ 	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
+diff --git a/dwm.c b/dwm.c
+index 4465af1..ada794b 100644
+--- a/dwm.c
++++ b/dwm.c
+@@ -213,6 +213,7 @@ static void togglebar(const Arg *arg);
+ static void togglefloating(const Arg *arg);
+ static void toggletag(const Arg *arg);
+ static void toggleview(const Arg *arg);
++static void transfer(const Arg *arg);
+ static void unfocus(Client *c, int setfocus);
+ static void unmanage(Client *c, int destroyed);
+ static void unmapnotify(XEvent *e);
+@@ -2147,3 +2148,36 @@ main(int argc, char *argv[])
+ 	XCloseDisplay(dpy);
+ 	return EXIT_SUCCESS;
+ }
++
++void
++transfer(const Arg *arg) {
++	Client *c, *mtail = selmon->clients, *stail = NULL, *insertafter;
++	int transfertostack = 0, i, nmasterclients;
++
++	for (i = 0, c = selmon->clients; c; c = c->next) {
++		if (!ISVISIBLE(c) || c->isfloating) continue;
++		if (selmon->sel == c) { transfertostack = i < selmon->nmaster && selmon->nmaster != 0; }
++		if (i < selmon->nmaster) { nmasterclients++; mtail = c; }
++		stail = c;
++		i++;
++	}
++	if (selmon->sel->isfloating || i == 0) {
++		return;
++	} else if (transfertostack) {
++		selmon->nmaster = MIN(i, selmon->nmaster) - 1;
++		insertafter = stail;
++	} else {
++		selmon->nmaster = selmon->nmaster + 1;
++		insertafter = mtail;
++	}
++	if (insertafter != selmon->sel) {
++		detach(selmon->sel);
++		if (selmon->nmaster == 1 && !transfertostack) {
++		 attach(selmon->sel); // Head prepend case
++		} else {
++			selmon->sel->next = insertafter->next;
++			insertafter->next = selmon->sel;
++		}
++	}
++	arrange(selmon);
++}
+-- 
+2.23.1
+
