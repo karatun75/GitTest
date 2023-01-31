@@ -1,10 +1,10 @@
 #!/bin/bash
 # 1
 
-ping 8.8.8.8
+ping -c17 8.8.8.8
 
-ls /dev/nvme*
-ls /dev/sd*
+# ls /dev/nvme*
+# ls /dev/sd*
 
 lsblk
 
@@ -16,7 +16,7 @@ gdisk /dev/nvme0n1
 # set 1 boot on 
 # mkpart primary
 # Теперь можем настроить шифрование на втором диске:
-n
+# n
 
 
 cryptsetup luksFormat /dev/nvme0n1p4
@@ -63,7 +63,7 @@ swapon /dev/mapper/steel-swap
 
 nano /etc/pacman.d/mirrorlist
 
-Server=http//mirrors.prok.pw/archlinux/$repo/os/$arch
+# Server=http://mirrors.prok.pw/archlinux/$repo/os/$arch
 
 # Устанавливаем
 
