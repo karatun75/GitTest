@@ -7,10 +7,10 @@ nano /etc/locale.gen
 
 echo "locale-gen"
 
-echo "LANG="ru_RU.UTF-8"' > /etc/locale.conf"
+echo "LANG="ru_RU.UTF-8" > /etc/locale.conf"
 
-echo "KEYMAP=ru' >> /etc/vconsole.conf"
-echo "FONT=cyr-sun16' >> /etc/vconsole.conf"
+echo "KEYMAP=ru >> /etc/vconsole.conf"
+echo "FONT=cyr-sun16 >> /etc/vconsole.conf"
 
 # Mkinitcpio
 # Mkinitcpio генерирует initramfs. И так как мы использовали два модуля, которые не включены по-умолчанию encrypt и lvm2, нам надо их включить.
