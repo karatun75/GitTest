@@ -59,8 +59,7 @@ echo mkdir -p /mnt/{home,boot/efi}
 echo mount /dev/nvme0n1p1 /mnt/boot/efi
 echo mount /dev/mapper/steel-home /mnt/home
 echo swapon /dev/mapper/steel-swap
-echo lsblk
-echo blkid
+
 
 # Зеркала устанавливаем
 
