@@ -1,6 +1,7 @@
 #!/bin/bash
 # Gentoo1
 # https://vk.com/@poruncov-chek-list-po-ustanovke-gemtoo-x86-64
+# https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Installation/ru#GUID_Partition_Table_.28GPT.29
 
 ping -c17 8.8.8.8
 
