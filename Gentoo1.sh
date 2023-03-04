@@ -168,11 +168,11 @@ PKGDIR="/var/cache/binpkgs"
 
 LC_MESSAGES=C
 
-MAKEOPTS=" -j3 "
+MAKEOPTS=" -j20 "
 
 USE="X bluetooth -gpm alsa unicode ABI_X86=64 dbus amd64 abi_x86_32 qt4 qt5 -gnome -kde -dvd -cdr pulseaudio i3wm"
 
-VIDEO_CARDS="intel" # для драйвера video карты
+VIDEO_CARDS="nouveau" # для драйвера video карты свободный драйвер
 
 Чек лист по установке Gentoo x86-64, изображение №8
 ACCEPT_LICENSE="*" # принимаем все условия лицензионного согдашения
