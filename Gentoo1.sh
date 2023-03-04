@@ -58,6 +58,7 @@ mkswap /dev/mapper/steel-swap
 mount /dev/mapper/steel-root /mnt/gentoo
 
 chmod 1777 /mnt/gentoo/tmp
+date  code>MMDDhhmmYYYY (M — месяц, D — день, h — час, m — минута и Y — год)
 
 mkdir -p /mnt/{home,boot/efi}
 mount /dev/nvme0n1p1 /mnt/boot/efi
