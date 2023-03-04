@@ -83,7 +83,7 @@ COMMON_FLAGS="-march=native -O2 -pipe"
 
 # Далее укажем количество ядер/потоков компиляции:
 
-MAKEOPTS="-j15"
+MAKEOPTS="-j20"
 
 # Установка базовой системы Gentoo
 
