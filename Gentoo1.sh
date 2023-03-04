@@ -56,6 +56,9 @@ mkswap /dev/mapper/steel-swap
 # Монтируем
 
 mount /dev/mapper/steel-root /mnt/gentoo
+
+chmod 1777 /mnt/gentoo/tmp
+
 mkdir -p /mnt/{home,boot/efi}
 mount /dev/nvme0n1p1 /mnt/boot/efi
 mount /dev/mapper/steel-home /mnt/home
