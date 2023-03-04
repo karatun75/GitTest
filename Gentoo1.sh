@@ -1,5 +1,6 @@
 #!/bin/bash
 # Gentoo1
+# https://vk.com/@poruncov-chek-list-po-ustanovke-gemtoo-x86-64
 
 ping -c17 8.8.8.8
 
