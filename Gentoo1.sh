@@ -250,7 +250,7 @@ emerge --ask sys-kernel/gentoo-sources << добавил lspci в систему
 
 ____________________________________________________________________________________________
 
-genkernel
+genkernel --luks --lvm initramfs
 
 emerge --ask sys-kernel/genkernel
 
