@@ -103,11 +103,11 @@ mount --types proc /proc /mnt/gentoo/proc
 
 mount --rbind /sys /mnt/gentoo/sys
 
-mount --make-rslave /mnt/gentoo/sys
+# mount --make-rslave /mnt/gentoo/sys
 
 mount --rbind /dev /mnt/gentoo/dev
 
-mount --make-rslave /mnt/gentoo/dev
+# mount --make-rslave /mnt/gentoo/dev
 
 # CHROOT
 
@@ -174,14 +174,14 @@ USE="X bluetooth -gpm alsa unicode ABI_X86=64 dbus amd64 abi_x86_32 qt4 qt5 -gno
 
 VIDEO_CARDS="nouveau" # для драйвера video карты свободный драйвер
 
-Чек лист по установке Gentoo x86-64, изображение №8
+# Чек лист по установке Gentoo x86-64, изображение №8
 ACCEPT_LICENSE="*" # принимаем все условия лицензионного согдашения
 
 LANGUAS="ru"
 
 L10N="ru»
 
-____________________________________________________________________________________________
+#____________________________________________________________________________________________
 
 Настроим время
 
@@ -189,13 +189,13 @@ ls /usr/share/zoneinfo
 
 echo "Europe/Moscow" > /etc/timezone
 
-перенастроим пакет sys-libs/timezone-data
+# перенастроим пакет sys-libs/timezone-data
 
 emerge --config sys-libs/timezone-data
 
-____________________________________________________________________________________________
+#____________________________________________________________________________________________
 
-Настройка локалей
+# Настройка локалей
 
 nano -w /etc/locale.gen
 
@@ -203,44 +203,44 @@ en_US.UTF-8 UTF-8
 
 ru_RU.UTF-8 UTF-8
 
-пример настройки
+# пример настройки
 
-Чек лист по установке Gentoo x86-64, изображение №9
+# Чек лист по установке Gentoo x86-64, изображение №9
 locale-gen
 
-Теперь выберем локаль по умолчанию
+# Теперь выберем локаль по умолчанию
 
 eselect locale list
 
-Чек лист по установке Gentoo x86-64, изображение №10
-в моем случае set 5
+# Чек лист по установке Gentoo x86-64, изображение №10
+# в моем случае set 5
 
 eselect locale set 5
 
-далее добавим поддержку кириллицы в консоли:
+# далее добавим поддержку кириллицы в консоли:
 
 nano /etc/conf.d/consolefont
 
-и добавим cyr-san16
+# и добавим cyr-sun16
 
-вот пример готового файла
+# вот пример готового файла
 
-Чек лист по установке Gentoo x86-64, изображение №11
-далее включим службу consolefont
+# Чек лист по установке Gentoo x86-64, изображение №11
+# далее включим службу consolefont
 
-добавим
+# добавим
 
 rc-update add consolefont boot
 
 rc-service consolefont start
 
-перезапустим окружение
+# перезапустим окружение
 
 env-update && source /etc/profile && export PS1="(chroot) ${PS1}»
 
-____________________________________________________________________________________________
+# ____________________________________________________________________________________________
 
-Настройка ядра Linux
+# Настройка ядра Linux
 
 emerge --ask sys-kernel/gentoo-sources << добавил lspci в систему
 
@@ -254,16 +254,18 @@ genkernel --luks --lvm initramfs
 
 emerge --ask sys-kernel/genkernel
 
-далее нам необходимо отредактировать fstab
+# далее нам необходимо отредактировать fstab
 
 nano /etc/fstab
 
-В процессе настройки Gentoo /etc/fstab еще будет изменён. На данный момент мы правим лишь /boot, так как genkernel использует эту настройку.
+# В процессе настройки Gentoo /etc/fstab еще будет изменён. На данный момент мы правим лишь /boot, так как genkernel использует эту настройку.
 
-если отдельный boot (mbr-legacy)
+# если отдельный boot (mbr-legacy)
 
-/dev/sda1	/boot	ext2	defaults	0 2
-UEFI
+#/dev/sda1	/boot	ext2	defaults	0 2
+
+#######
+# UEFI
 
 /dev/sda1	/boot	vfat rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,utf8,errors=remount-ro    0 2  
 Теперь запустим сборку ядра
