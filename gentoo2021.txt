@@ -1,0 +1,205 @@
+1)Разметка диска 
+ 
+31M/dev/sdx1 Bios boot 
+300M /dev/sdx2 Efy system 
+1-6  /dev/sdx3 swap
+free space /dev/sdx4 root
+
+2)Форматирование диска
+
+mkfs.vfat /dev/sdx2 
+mkfs.ext4 /dev/sdx4 
+mkswap  /dev/sdx3
+swapon /dev/sdx3
+
+3)Монтирование корневого раздела и загрузка тарбола стейдж 3
+
+mount /dev/sdx4 /mnt/gentoo
+cd /mnt/gentoo
+date  пероверить дату и вермя
+date  MMDDhhmmYYYY (M — месяц, D — день, h — час, m — минута и Y — год) это установит дату 
+links mirror.yandex.ru  качаем тарбол 
+
+4) распаковка тарбола и установка системы 
+
+tar xpvf stage3 НАШ ТАРБОЛ *.tar.bz2 --xattrs-include='*.*' --numeric-owner
+
+nano -w /mnt/gentoo/etc/portage/make.conf  создаем файл параметров компиляции
+
+Берем параметры своего процессора со странички Safe CFLAGS
+
+задаем MAKEOPTS="-j2" по принцыпу плюс 1 (имеем два ядра -j2 и +1 -j3)
+
+merge --ask app-portage/cpuid2cpuflags устанавливаем для полчения флагов оптимизации процессора
+
+заносим флаги в make conf 
+
+ACCEPT_LICENSE="*" задаем разарешение на установку всех лицензий 
+
+Далее настройка зеркал и интерент соединения 
+
+nano -w /etc/resolv.conf
+
+ там nameserver 8.8.8.8
+     nameserver 8.8.4.4
+
+mirrorselect -i -o >> /mnt/gentoo/etc/portage/make.conf
+
+mkdir --parents /mnt/gentoo/etc/portage/repos.conf
+
+cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
+
+cp --dereference /etc/resolv.conf /mnt/gentoo/etc/
+
+
+далее монтируем разделы 
+
+mount --types proc /proc /mnt/gentoo/proc
+mount --rbind /sys /mnt/gentoo/sys
+mount --make-rslave /mnt/gentoo/sys
+mount --rbind /dev /mnt/gentoo/dev
+mount --make-rslave /mnt/gentоoo/dev
+
+переход в устанавливаемую систему
+
+chroot /mnt/gentoo /bin/bash
+source /etc/profile
+export PS1="(chroot) ${P S1}"
+
+mount /dev/sdx /boot  монтирование бут раздела 
+
+emerge-webrsync  обновление списка репозиториев 
+
+emerge --ask --verbose --update --deep --newuse @world обновление базового профиля 
+
+eselect profile list список доступных профилей 
+
+eselect profile set номер  выбор нужного профиля 
+
+emerge --ask --verbose --update --deep --newuse @world  обновление мира с выбранным профилем 
+
+echo "Europe/Brussels" > /etc/timezone  настройка часового пояса 
+
+emerge --config sys-libs/timezone-data
+
+nano -w /etc/locale.gen генерация локали 
+
+en_US.UTF-8 UTF-8
+ru_RU.UTF-8 UTF-8
+
+locale-gen
+
+ eselect locale list  список локалей 
+
+ eselect locale set номер     выбор локали 
+
+env-update && source /etc/profile && export PS1="(chroot) ${PS1}" перезапуск окружения для применения изменений
+
+emerge --ask sys-kernel/gentoo-sources  загрузка исходного кода ядра
+
+ls -l /usr/src/linux  создание символьной ссылки версии ядра 
+
+emerge --ask sys-kernel/genkernel загрузка сборщика ядра
+
+nano -w /etc/fstab  указать разделы диска 
+
+genkernel all  запускаем генерацию ядра 
+
+emerge --ask sys-kernel/linux-firmware  загружаем прошивки компонетов коапьютера
+
+nano -w /etc/conf.d/hostname указать имя коапьютера 
+
+nano -w /etc/conf.d/net указать сетевое устройство 
+
+emerge --ask --noreplace net-misc/netifrc  установка сетевых утилит
+
+cd /etc/init.d   автоматический запуск сетевого подключения
+ln -s net.lo net.eth0
+rc-update add net.eth0 default
+
+nano /etc/security/passwdqc.conf  редактирование конфигурации пароля
+
+passwd  задаем пароль root
+
+emerge --ask app-admin/sysklogd  установка системного журнала 
+rc-update add sysklogd default  
+
+rc-update add sshd default   установка sshd
+
+ Ext2, 3, и 4      sys-fs/e2fsprogs    установка необходимых утилит для файловых систем
+ Btrfs             sys-fs/btrfs-progs     
+ VFAT (FAT32, ...) sys-fs/dosfstools
+
+emerge --ask net-misc/dhcpcd  установка dhcp
+ 
+emerge --ask net-wireless/iw net-wireless/wpa_supplicant  установка утилит для беспроводных сетей
+
+echo 'GRUB_PLATFORMS="efi-64"' >> /etc/portage/make.conf добавление флагов для загрузчика
+echo 'GRUB_PLATFORMS="efi-x86_64"' >> /etc/portage/make.conf
+emerge --ask --verbose sys-boot/grub:2
+
+Для UEFI
+
+grub-install --target=x86_64-efi --efi-directory=/boot
+
+Для обычного BIOS
+
+grub-install /dev/sda
+
+
+grub-mkconfig -o /boot/grub/grub.cfg    конфигурируем загрузчик
+
+rm /stage3-*.tar.*  удаляем ранее скачаный тарбол 
+
+emerge --ask sudo 
+
+useradd -m -G users,audio,video,wheel -s /bin/bash usernme 
+
+passwd username 
+
+ 5) Установка графической оболочки 
+
+emerge --ask  x11-base/xorg-server  установка xorg 
+ 
+emerge --ask x11-base/xorg-drivers
+
+emerge --ask gui-libs/display-manager-init
+
+rc-update add display-manager default
+
+rc-service display-manager start
+
+====> XFCE + lightdm 
+
+emerge --ask xfce-base/xfce4-meta xfce-extra/xfce4-notifyd  это xfce4
+
+emerge --ask x11-misc/lightdm-gtk-greeter  это lightdm
+
+=====> KDE + SDDM
+
+emerge --ask kde-plasma/plasma-meta 
+emerge --ask x11-misc/sddm
+emerge --ask kde-apps/kdeadmin-meta
+emerge --ask kde-apps/kdecore-meta
+emerge --ask kde-apps/kdeutils-meta
+
+emerge --ask pulsaudio   звуковой пакет
+emerge --ask plasma-pa
+
+nano -w /etc/conf.d/display-manager вносим наш дисплейменеджер
+
+ пример DISPLAYMANAGER="sddm"  или  DISPLAYMANAGER="lightdm"
+
+Выход из текущей системы и перезагрузка 
+
+exit
+cd
+umount -l /mnt/gentoo/dev{/shm,/pts,}
+umount -R /mnt/gentoo
+reboot
+
+
+
+
+ 
+
