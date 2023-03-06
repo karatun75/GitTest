@@ -5,6 +5,8 @@
 # https://wiki.gentoo.org/wiki/Dm-crypt_fu
 # https://www.youtube.com/watch?v=LdrhKCTCqs0
 # https://www.youtube.com/watch?v=3A9GH2WCR_g
+
+# https://www.youtube.com/watch?v=q9_sXkA4Rv8 на Yandex 
 ping -c17 8.8.8.8
 
 # ls /dev/nvme*
